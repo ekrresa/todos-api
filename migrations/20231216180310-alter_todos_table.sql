@@ -1,0 +1,30 @@
+
+-- +migrate Up
+ALTER TABLE todos
+ALTER COLUMN created_at
+SET DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE todos 
+RENAME COLUMN name TO title;
+
+ALTER TABLE todos
+ADD COLUMN description VARCHAR (255);
+
+ALTER TABLE todos
+ALTER COLUMN status
+SET NOT NULL;
+
+-- +migrate Down
+ALTER TABLE todos
+ALTER COLUMN created_at
+DROP DEFAULT;
+
+ALTER TABLE todos
+RENAME COLUMN title TO name;
+
+ALTER TABLE todos
+ALTER COLUMN status
+DROP NOT NULL;
+
+ALTER TABLE todos 
+DROP COLUMN description;
