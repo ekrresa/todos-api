@@ -2,6 +2,7 @@ package main
 
 import (
 	"go-migrations/config"
+	"go-migrations/todos"
 	"log"
 	"net/http"
 
@@ -18,6 +19,12 @@ func main() {
 	config.ApplyMigrations(db.DB)
 
 	var router = chi.NewRouter()
+
+	router.Post("/", todos.CreateTodo(db))
+	router.Get("/", todos.GetTodos(db))
+	router.Get("/{id}", todos.GetTodo(db))
+	router.Put("/{id}", todos.GetTodo(db))
+	router.Delete("/{id}", todos.GetTodo(db))
 
 	err := http.ListenAndServe(":3000", router)
 
