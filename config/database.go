@@ -22,6 +22,8 @@ func ConnectToDB() *sqlx.DB {
 		log.Fatal("Error connecting to DB:", err)
 	}
 
+	fmt.Println("Connected to DB!")
+
 	return db
 }
 
