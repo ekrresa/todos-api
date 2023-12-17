@@ -22,6 +22,9 @@ func ConnectToDB() *sqlx.DB {
 		log.Fatal("Error connecting to DB:", err)
 	}
 
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(10)
+
 	fmt.Println("Connected to DB!")
 
 	return db
