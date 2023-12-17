@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"go-migrations/helpers"
-	"go-migrations/model"
 	"log"
 	"net/http"
 
@@ -15,7 +14,7 @@ import (
 
 func CreateTodo(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var requestBody model.CreateTodoInput
+		var requestBody CreateTodoInput
 
 		var decodeErr = helpers.DecodeJSONBody(w, r.Body, &requestBody)
 		if decodeErr != nil {
@@ -35,19 +34,11 @@ func CreateTodo(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		var todo = model.Todo{
-			Title:       requestBody.Title,
-			Description: requestBody.Description,
-			Status:      requestBody.Status,
-		}
+		var todo Todo
 
-		if todo.Status == "" {
-			todo.Status = "new"
-		}
-
-		var insertErr = db.QueryRowx(`
+		var insertErr = db.Get(&todo, `
 			INSERT INTO todos (title, description, status) 
-			VALUES ($1, $2, $3) RETURNING *`, todo.Title, todo.Description, todo.Status).Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Status, &todo.CreatedAt, &todo.UpdatedAt)
+			VALUES ($1, $2, $3) RETURNING *`, requestBody.Title, requestBody.Description, requestBody.Status)
 
 		if insertErr != nil {
 			log.Println("Error inserting todo:", insertErr.Error())
@@ -61,7 +52,7 @@ func CreateTodo(db *sqlx.DB) http.HandlerFunc {
 
 func GetTodos(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var todos []model.Todo
+		var todos = []Todo{}
 
 		var err = db.Select(&todos, "SELECT * FROM todos")
 		if err != nil {
@@ -77,7 +68,7 @@ func GetTodos(db *sqlx.DB) http.HandlerFunc {
 func GetTodo(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var todoId = chi.URLParam(r, "id")
-		var todo model.Todo
+		var todo Todo
 
 		var err = db.Get(&todo, "SELECT * FROM todos WHERE id = $1", todoId)
 		if err != nil {
