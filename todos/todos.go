@@ -93,5 +93,15 @@ func UpdateTodo(db *sqlx.DB) http.HandlerFunc {
 
 func DeleteTodo(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var todoId = chi.URLParam(r, "id")
+
+		var _, err = db.Exec("DELETE FROM todos WHERE id = $1", todoId)
+		if err != nil {
+			log.Println("Error deleting todo:", err.Error())
+			helpers.ErrorResponse(w, "Error deleting todo", http.StatusInternalServerError)
+			return
+		}
+
+		helpers.SuccessResponse(w, nil, "Todo deleted successfully", http.StatusOK)
 	}
 }

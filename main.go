@@ -24,7 +24,7 @@ func main() {
 	router.Get("/", todos.GetTodos(db))
 	router.Get("/{id}", todos.GetTodo(db))
 	router.Put("/{id}", todos.GetTodo(db))
-	router.Delete("/{id}", todos.GetTodo(db))
+	router.Delete("/{id}", todos.DeleteTodo(db))
 
 	err := http.ListenAndServe(":3000", router)
 
