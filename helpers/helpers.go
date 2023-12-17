@@ -79,8 +79,11 @@ func SuccessResponse(w http.ResponseWriter, data interface{}, message string, st
 	response := make(map[string]any)
 	response["message"] = message
 	response["status"] = "success"
-	response["data"] = data
-	jsonResponse, _ := json.Marshal(response)
+
+	if data != nil {
+		response["data"] = data
+	}
+	var jsonResponse, _ = json.Marshal(response)
 
 	w.Write(jsonResponse)
 }
