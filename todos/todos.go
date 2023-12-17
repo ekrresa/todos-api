@@ -1,12 +1,14 @@
 package todos
 
 import (
+	"database/sql"
 	"errors"
 	"go-migrations/helpers"
 	"go-migrations/model"
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
 )
@@ -72,6 +74,26 @@ func GetTodos(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
+func GetTodo(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var todoId = chi.URLParam(r, "id")
+		var todo model.Todo
+
+		var err = db.Get(&todo, "SELECT * FROM todos WHERE id = $1", todoId)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				helpers.ErrorResponse(w, "Todo not found", http.StatusNotFound)
+			} else {
+				log.Println("Error getting todo:", err.Error())
+				helpers.ErrorResponse(w, "Error getting todo", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		helpers.SuccessResponse(w, todo, "Todo retrieved successfully", http.StatusOK)
+	}
+}
+
 func UpdateTodo(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -81,8 +103,4 @@ func UpdateTodo(db *sqlx.DB) http.HandlerFunc {
 func DeleteTodo(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 	}
-}
-
-func GetTodo(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
 }
