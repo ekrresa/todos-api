@@ -102,6 +102,20 @@ func UpdateTodo(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		var todo Todo
+		var prevTodo UpdateTodoInput
+
+		var getErr = db.Get(&prevTodo, `SELECT title, description, status FROM todos WHERE id = $1`, todoId)
+		if getErr != nil {
+			if getErr == sql.ErrNoRows {
+				helpers.ErrorResponse(w, "Todo not found", http.StatusNotFound)
+			} else {
+				log.Println("Error updating todo: ", getErr.Error())
+				helpers.ErrorResponse(w, "Error updating todo", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		mergeTodos(&requestBody, &prevTodo)
 
 		var err = db.Get(&todo, `UPDATE todos
 		SET title = $2, description = $3, status = $4
@@ -109,12 +123,8 @@ func UpdateTodo(db *sqlx.DB) http.HandlerFunc {
 		RETURNING *`, todoId, requestBody.Title, requestBody.Description, requestBody.Status)
 
 		if err != nil {
-			if err == sql.ErrNoRows {
-				helpers.ErrorResponse(w, "Todo not found", http.StatusNotFound)
-			} else {
-				log.Println("Error updating todo:", err.Error())
-				helpers.ErrorResponse(w, "Error updating todo", http.StatusInternalServerError)
-			}
+			log.Println("Error updating todo:", err.Error())
+			helpers.ErrorResponse(w, "Error updating todo", http.StatusInternalServerError)
 			return
 		}
 
@@ -134,5 +144,19 @@ func DeleteTodo(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		helpers.SuccessResponse(w, nil, "Todo deleted successfully", http.StatusOK)
+	}
+}
+
+func mergeTodos(dest, src *UpdateTodoInput) {
+	if dest.Description == "" {
+		dest.Description = src.Description
+	}
+
+	if dest.Status == "" {
+		dest.Status = src.Status
+	}
+
+	if dest.Title == "" {
+		dest.Title = src.Title
 	}
 }
