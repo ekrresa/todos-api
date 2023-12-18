@@ -87,7 +87,38 @@ func GetTodo(db *sqlx.DB) http.HandlerFunc {
 
 func UpdateTodo(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var todoId = chi.URLParam(r, "id")
+		var requestBody UpdateTodoInput
 
+		var decodeErr = helpers.DecodeJSONBody(w, r.Body, &requestBody)
+		if decodeErr != nil {
+			var requestError *helpers.RequestError
+			if errors.As(decodeErr, &requestError) {
+				helpers.ErrorResponse(w, requestError.Error(), requestError.StatusCode)
+			} else {
+				helpers.ErrorResponse(w, decodeErr.Error(), http.StatusBadRequest)
+			}
+			return
+		}
+
+		var todo Todo
+
+		var err = db.Get(&todo, `UPDATE todos
+		SET title = $2, description = $3, status = $4
+		WHERE id = $1
+		RETURNING *`, todoId, requestBody.Title, requestBody.Description, requestBody.Status)
+
+		if err != nil {
+			if err == sql.ErrNoRows {
+				helpers.ErrorResponse(w, "Todo not found", http.StatusNotFound)
+			} else {
+				log.Println("Error updating todo:", err.Error())
+				helpers.ErrorResponse(w, "Error updating todo", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		helpers.SuccessResponse(w, todo, "Todo updated successfully", http.StatusOK)
 	}
 }
 

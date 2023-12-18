@@ -23,7 +23,7 @@ func main() {
 	router.Post("/", todos.CreateTodo(db))
 	router.Get("/", todos.GetTodos(db))
 	router.Get("/{id}", todos.GetTodo(db))
-	router.Put("/{id}", todos.GetTodo(db))
+	router.Put("/{id}", todos.UpdateTodo(db))
 	router.Delete("/{id}", todos.DeleteTodo(db))
 
 	err := http.ListenAndServe(":3000", router)
